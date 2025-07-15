@@ -31,7 +31,7 @@ public class CheckerGameLogic {
                 int rowDir = toRow - fromRow;
                 Color pieceColor = selectedPanel.getCircleColor();
                 boolean isValidMove = false;
-                int movabledistane = 1;
+                boolean isCapture = false;
                 //Check for valid capture move
                 if(rowDiff == 2 && colDiff == 2){
                     int midRow = (fromRow + toRow) / 2;
@@ -42,6 +42,7 @@ public class CheckerGameLogic {
                         if(midColor!=null && !midColor.equals(pieceColor)){
                             //Valid capture
                             isValidMove = true;
+                            isCapture = true;
                             mid.setCircleColor(null); //Remove component
                             System.out.println("Captured opponent at (" + midRow + "," + midCol + ")");
 
@@ -60,21 +61,30 @@ public class CheckerGameLogic {
                 if(isValidMove){
                     clickedPanel.setCircleColor(pieceColor);
                     selectedPanel.setCircleColor(null);
-                    System.out.println("Moved from (" + selectedPanel.getRow() + "," + selectedPanel.getCol() +
-                            ") to (" + clickedPanel.getRow() + "," + clickedPanel.getCol() + ")");
+                    System.out.println("Moved from (" + fromRow + "," + fromCol +
+                            ") to (" + toRow + "," + toCol + ")");
+                    //If it was a capture, check for another capture
+                    if(isCapture && canCaptureFrom(clickedPanel)){
+                        System.out.println("Another capture available!");
+                        selectedPanel = clickedPanel;//keep selection for next jump
+                    }else{
+                        selectedPanel = null;
+                    }
+
                 }else{
                     System.out.println("Invalid move. Only forward diagonal moves allowed");
-                }
 
-                // Deselect in any case
-                selectedPanel.revalidate();
-                selectedPanel.repaint();
+                }
+                if (selectedPanel != null) {
+                    selectedPanel.revalidate();
+                    selectedPanel.repaint();
+                }
                 clickedPanel.revalidate();
                 clickedPanel.repaint();
-                selectedPanel = null;
+
             } else {
                 System.out.println("Invalid destination.");
-                selectedPanel = null;
+
             }
         }
     }

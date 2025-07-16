@@ -1,3 +1,4 @@
+import javax.swing.*;
 import java.awt.*;
 
 public class CheckerGameLogic {
@@ -9,11 +10,20 @@ public class CheckerGameLogic {
     }
 
     public void handleCellClick(CirclePanel clickedPanel){
+        Color currentTurnColor = SimpleChessBoard.getCurrentPlayerColor();
+
         if(selectedPanel == null){
-            //First click - select a piece
-            if(clickedPanel.getCircleColor() != null){
+            //First click - select a piece that matches current player's color
+            Color pieceColor = clickedPanel.getCircleColor();
+            if(pieceColor != null && pieceColor.equals(currentTurnColor)){
                 selectedPanel = clickedPanel;
                 System.out.println("Selected piece at (" + clickedPanel.getRow() + "," + clickedPanel.getCol() + ")");
+            } else if (pieceColor!=null) {
+                JOptionPane.showMessageDialog(null,
+                        "Not your piece! You can only move your own discs.",
+                        "Invalid Selection",
+                        JOptionPane.WARNING_MESSAGE);
+
             } else {
                 System.out.println("No piece to select. ");
             }
@@ -32,6 +42,7 @@ public class CheckerGameLogic {
                 Color pieceColor = selectedPanel.getCircleColor();
                 boolean isValidMove = false;
                 boolean isCapture = false;
+
                 //Check for valid capture move
                 if(rowDiff == 2 && colDiff == 2){
                     int midRow = (fromRow + toRow) / 2;
@@ -69,10 +80,17 @@ public class CheckerGameLogic {
                         selectedPanel = clickedPanel;//keep selection for next jump
                     }else{
                         selectedPanel = null;
+
                     }
 
+                    //Switch Turn
+                    SimpleChessBoard.switchTurn();
+
                 }else{
-                    System.out.println("Invalid move. Only forward diagonal moves allowed");
+                    JOptionPane.showMessageDialog(null,"Invalid move. Only forward diagonal moves allowed","Invalid Selection",JOptionPane.WARNING_MESSAGE);
+                    // ✅ Reset the selection so the player can try again
+                    selectedPanel = null;
+
 
                 }
                 if (selectedPanel != null) {
@@ -83,7 +101,19 @@ public class CheckerGameLogic {
                 clickedPanel.repaint();
 
             } else {
-                System.out.println("Invalid destination.");
+                JOptionPane.showMessageDialog(null,
+                        "Invalid destination.",
+                        "Invalid Input",
+                        JOptionPane.WARNING_MESSAGE);
+                // ✅ Reset the selection so the player can try again
+                selectedPanel = null;
+                if (selectedPanel != null) {
+                    selectedPanel.revalidate();
+                    selectedPanel.repaint();
+                }
+                clickedPanel.revalidate();
+                clickedPanel.repaint();
+
 
             }
         }

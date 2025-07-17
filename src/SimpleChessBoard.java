@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class SimpleChessBoard {
     private static String currentPlayer;
@@ -52,48 +50,70 @@ public class SimpleChessBoard {
             topPanel.add(playerLabel);
             topPanel.add(playerturnLabel);
 
-            JPanel bottomPanel = new JPanel();
+            // Bottom Panel with BorderLayout to hold left and right sub-panels
+            JPanel bottomPanel = new JPanel(new BorderLayout());
             bottomPanel.setPreferredSize(new Dimension(800,40));
+
+            //----------------Left panel : Restart & Reset Buttons ---------------
+            JPanel leftButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+
+            JButton restartButton = new JButton("Restart");
+            restartButton.setFont(new Font("SansSerif",Font.PLAIN,14));
+            restartButton.setFocusPainted(false);
+            restartButton.addActionListener(e -> {
+                JOptionPane.showMessageDialog(null,
+                        "This is Reset Button",
+                        "Reset",
+                        JOptionPane.PLAIN_MESSAGE);
+            });
+
+            JButton resetButton = new JButton("Reset");
+            resetButton.setFont(new Font("SansSerif",Font.PLAIN,14));
+            resetButton.setFocusPainted(false);
+            restartButton.addActionListener(e -> {
+                JOptionPane.showMessageDialog(null,
+                        "This is Restart Button",
+                        "Restart",
+                        JOptionPane.PLAIN_MESSAGE);
+
+            });
+
+            leftButtonsPanel.add(restartButton);
+            leftButtonsPanel.add(resetButton);
+
+            //-------RIGHT Panel: Done Button ---------------------
+            JPanel rightButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+            JButton doneButton = new JButton("Done");
+            doneButton.setFocusPainted(false);
+            doneButton.setFont(new Font("SansSerif",Font.BOLD, 14));
+            doneButton.addActionListener(e -> {
+                boolean forceEndTurn = gameLogic.getForceEndTurn();
+                if(!forceEndTurn){
+                    JOptionPane.showMessageDialog(null,
+                            "You haven't made a move yet!",
+                            "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                }else{
+                    gameLogic.resetSelection();        // Clear selected piece
+                    gameLogic.clearForceEndTurn();     // Allow next player to move
+                    switchTurn();                      // Now switch turn
+                }
+
+            });
+
+            rightButtonsPanel.add(doneButton);
+
+            // Add both sub-panels to the bottomPanel
+            bottomPanel.add(leftButtonsPanel, BorderLayout.WEST);
+            bottomPanel.add(rightButtonsPanel,BorderLayout.EAST);
 
 
             JPanel boardPanel = new JPanel();
             boardPanel.setLayout(new GridLayout(8, 8, 2, 2)); // spacing between cells
             boardPanel.setBackground(Color.DARK_GRAY); // background between cells
 
-            // Fill 8x8 board with black circles and blue discs
-            for (int row = 0; row < 8; row++) {
-                for (int col = 0; col < 8; col++) {
-                    // Checkerboard square background color
-                    Color squareColor = ((row + col) % 2 == 0) ? Color.WHITE : new Color(181, 136, 99);
-
-
-                    // Checker piece color (only on dark squares)
-                    Color circleColor = null;
-                    if ((row + col) % 2 != 0) { // only dark squares
-                        if (row < 3) {
-                            circleColor = Color.BLACK;
-                        } else if (row > 4) {
-                            circleColor = Color.BLUE;
-                        }
-                    }
-
-                    final CirclePanel piece = new CirclePanel(circleColor, row, col);
-                    board[row][col] = piece; //Store in board
-
-                    piece.setBackground(squareColor); //set cell background color
-                    piece.setOpaque(true);
-                    piece.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
-
-                    //Add moouse listener her
-                    piece.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mousePressed(MouseEvent e) {
-                            gameLogic.handleCellClick(piece);
-                        }
-                    });
-                    boardPanel.add(piece);
-                }
-            }
+            BoardBuilder.buildCheckerBoard(boardPanel,board,gameLogic);
 
 
 
@@ -121,6 +141,13 @@ public class SimpleChessBoard {
             playerColor = "Black";
         }
         playerturnLabel.setText(currentPlayer+"'s Turn"+" ("+playerColor+")");
+    }
+
+    public static void toswitchTurn() {
+        JOptionPane.showMessageDialog(null,
+                "Switch Turn Please",
+                "Warning to swich turn",
+                JOptionPane.WARNING_MESSAGE);
     }
 
     public static Color getCurrentPlayerColor() {

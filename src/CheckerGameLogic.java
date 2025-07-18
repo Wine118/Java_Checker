@@ -235,6 +235,111 @@ public class CheckerGameLogic {
                 JOptionPane.WARNING_MESSAGE);
     }
 
+    public Color checkWinner() {
+        boolean blackHasMoves = false;
+        boolean blueHasMoves = false;
+        int blackCount = 0;
+        int blueCount = 0;
+
+        for(int row=0; row < 8; row++){
+            for(int col=0; col<8;col++){
+               CirclePanel piece = board[row][col];
+               Color color = piece.getCircleColor();
+
+               if(color != null){
+                   if(color.equals(Color.BLACK)){
+                       blackCount++;
+                       if(canAnyMove(row,col,Color.BLACK) && blackCount >0){
+                            blackHasMoves = true;
+                       }
+                   } else if (color.equals(Color.BLUE)) {
+                       blueCount++;
+                       if(canAnyMove(row,col,Color.BLUE) && blueCount > 0){
+                           blueHasMoves = true;
+                       }
+
+                   }
+               }
+            }
+        }
+        if(blackCount == 0 || !blackHasMoves) return Color.BLUE;
+        if(blueCount == 0 || !blueHasMoves) return Color.BLACK;
+        return  null;//No winner yet
+    }
+
+    public Color checkWinnerEarly() {
+        int blackCount = 0;
+        int blueCount = 0;
+        boolean bluegoal = false;
+        boolean blackgoal = false;
+
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                CirclePanel panel = board[row][col];
+                if (panel.getCircleColor() != null) {
+                    if (panel.getCircleColor().equals(Color.BLACK)) {
+                        blackCount++;
+                    } else if (panel.getCircleColor().equals(Color.BLUE)) {
+                        blueCount++;
+                    }
+                }
+            }
+        }
+
+        // 🏆 Rule 1: One player has no pieces left
+        if (blackCount == 0 && blueCount > 0) {
+            return Color.BLUE;
+        }
+        if (blueCount == 0 && blackCount > 0) {
+            return Color.BLACK;
+        }
+
+        // ⚠️ Rule 2: Early victory guess based on large piece difference
+        if (blackCount - blueCount >= 3 && blueCount <= 2) {
+            return Color.BLACK;
+        }
+        if (blueCount - blackCount >= 3 && blackCount <= 2) {
+            return Color.BLUE;
+        }
+
+        // 😐 No winner yet
+        return null;
+    }
+
+
+    public boolean canAnyMove(int row, int col, Color myColor){
+        int rowDir = myColor.equals(Color.BLACK) ? 1 : -1;
+        int[][] directions = {
+                {rowDir,-1},{rowDir,1}//forward-left and forward-right
+        };
+
+        for(int[] dir: directions){
+            int newRow = row + dir[0];
+            int newCol = col + dir[1];
+            int midRow = row + dir[0];
+            int midCol = col + dir[1];
+            int destRow = row + 2 * dir[0];
+            int destCol = col + 2 * dir[1];
+
+            // Regular move
+            if (isInBounds(newRow, newCol)) {
+                CirclePanel dest = board[newRow][newCol];
+                if (dest.getCircleColor() == null) return true;
+            }
+
+            //Capture move
+            if(isInBounds(midRow,midCol) && isInBounds(destRow,destCol)){
+                CirclePanel mid = board[midRow][midCol];
+                CirclePanel dest = board[destRow][destCol];
+                if(mid.getCircleColor()!=null && !mid.getCircleColor().equals(myColor)
+                && dest.getCircleColor() == null){
+                    return true;
+                }
+            }
+        }
+        return  false;
+    }
+
 
 }
 

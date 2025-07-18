@@ -78,8 +78,41 @@ public class SimpleChessBoard {
 
             });
 
+            JButton endAndCheckTheWinnerButton = new JButton("Check Winner To End");
+            endAndCheckTheWinnerButton.setFont(new Font("SansSerif",Font.PLAIN,14));
+            endAndCheckTheWinnerButton.setFocusPainted(false);
+            endAndCheckTheWinnerButton.addActionListener(e -> {
+                Color winner = gameLogic.checkWinnerEarly();
+
+                if(winner != null){
+                    if(winner.equals(PLAYER1_COLOR)){
+                        JOptionPane.showMessageDialog(null,
+                                player1Name + " (Black) wins the game!",
+                                "Game Over",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    } else if (winner.equals(PLAYER2_COLOR)) {
+                        JOptionPane.showMessageDialog(null,
+                                player2Name + " (Blue) wins the game!",
+                                "Game Over",
+                                JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(null,
+                                "Oops!!! Something went wrong in winner checking logic.",
+                                "Game Over",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null,
+                            "Winner can't be decided yet,\nDo you want to restart? Then press Restart button.",
+                            "Warning",
+                            JOptionPane.WARNING_MESSAGE);
+                }
+            });
+
+
             leftButtonsPanel.add(restartButton);
             leftButtonsPanel.add(resetButton);
+            leftButtonsPanel.add(endAndCheckTheWinnerButton);
 
             //-------RIGHT Panel: Done Button ---------------------
             JPanel rightButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -97,7 +130,31 @@ public class SimpleChessBoard {
                 }else{
                     gameLogic.resetSelection();        // Clear selected piece
                     gameLogic.clearForceEndTurn();     // Allow next player to move
-                    switchTurn();                      // Now switch turn
+
+                    Color winner = gameLogic.checkWinner();
+                    if(winner != null){
+                        if(winner.equals(PLAYER1_COLOR)){
+                            JOptionPane.showMessageDialog(null,
+                                    player1Name+" (Black) "+" wins the game!",
+                                    "Game Over",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        }else if (winner.equals(PLAYER2_COLOR)){
+                            JOptionPane.showMessageDialog(null,
+                                    player2Name+" (Blue) "+" wins the game!",
+                                    "Game Over",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        }else{
+                            JOptionPane.showMessageDialog(null,
+                                    "Oops!!! Something wrongs with winner Checking process",
+                                    "Game Over",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        }
+
+                    }else{
+                        switchTurn();                      // Now switch turn
+                    }
+
+
                 }
 
             });

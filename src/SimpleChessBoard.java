@@ -82,7 +82,7 @@ public class SimpleChessBoard {
             endAndCheckTheWinnerButton.setFont(new Font("SansSerif",Font.PLAIN,14));
             endAndCheckTheWinnerButton.setFocusPainted(false);
             endAndCheckTheWinnerButton.addActionListener(e -> {
-                Color winner = gameLogic.checkWinnerEarly();
+                Color winner = gameLogic.checkWinner();
 
                 if(winner != null){
                     if(winner.equals(PLAYER1_COLOR)){
@@ -122,41 +122,18 @@ public class SimpleChessBoard {
             doneButton.setFont(new Font("SansSerif",Font.BOLD, 14));
             doneButton.addActionListener(e -> {
                 boolean forceEndTurn = gameLogic.getForceEndTurn();
-                if(!forceEndTurn){
+                boolean turnAble = gameLogic.getTurnAble();
+
+                if(turnAble){
+                    MakeDoneButtonAction(gameLogic);
+                } else if (!forceEndTurn) {
                     JOptionPane.showMessageDialog(null,
-                            "You haven't made a move yet!",
-                            "Warning",
+                            "Switch Turn Please",
+                            "Warning to swich turn",
                             JOptionPane.WARNING_MESSAGE);
-                }else{
-                    gameLogic.resetSelection();        // Clear selected piece
-                    gameLogic.clearForceEndTurn();     // Allow next player to move
-
-                    Color winner = gameLogic.checkWinner();
-                    if(winner != null){
-                        if(winner.equals(PLAYER1_COLOR)){
-                            JOptionPane.showMessageDialog(null,
-                                    player1Name+" (Black) "+" wins the game!",
-                                    "Game Over",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                        }else if (winner.equals(PLAYER2_COLOR)){
-                            JOptionPane.showMessageDialog(null,
-                                    player2Name+" (Blue) "+" wins the game!",
-                                    "Game Over",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                        }else{
-                            JOptionPane.showMessageDialog(null,
-                                    "Oops!!! Something wrongs with winner Checking process",
-                                    "Game Over",
-                                    JOptionPane.INFORMATION_MESSAGE);
-                        }
-
-                    }else{
-                        switchTurn();                      // Now switch turn
-                    }
-
-
+                }else {
+                    MakeDoneButtonAction(gameLogic);
                 }
-
             });
 
             rightButtonsPanel.add(doneButton);
@@ -209,5 +186,39 @@ public class SimpleChessBoard {
 
     public static Color getCurrentPlayerColor() {
         return currentPlayer.equals(player1Name) ? PLAYER1_COLOR : PLAYER2_COLOR;
+    }
+
+    public static void MakeDoneButtonAction(CheckerGameLogic gameLogic) {
+        gameLogic.resetSelection();        // Clear selected piece
+        gameLogic.clearForceEndTurn();     // Allow next player to move
+        gameLogic.clearTurnAble();//switch off turnable feature
+
+        Color winner = gameLogic.checkWinner();
+        if(winner != null){
+            if(winner.equals(PLAYER1_COLOR)){
+                JOptionPane.showMessageDialog(null,
+                        player1Name+" (Black) "+" wins the game!",
+                        "Game Over",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }else if (winner.equals(PLAYER2_COLOR)){
+                JOptionPane.showMessageDialog(null,
+                        player2Name+" (Blue) "+" wins the game!",
+                        "Game Over",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else if (winner.equals(Color.CYAN)) {
+                JOptionPane.showMessageDialog(null,
+                        "It is a tie. ",
+                        "Game Over",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else{
+                JOptionPane.showMessageDialog(null,
+                        "Oops!!! Something wrongs with winner Checking process",
+                        "Game Over",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
+
+        }else{
+            switchTurn();                      // Now switch turn
+        }
     }
 }

@@ -33,7 +33,7 @@ public class BoardBuilder {
                 piece.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
-                        gameLogic.handleCellClick(piece);
+                        gameLogic.handleClick(piece);
                     }
                 });
                 boardPanel.add(piece);

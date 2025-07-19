@@ -12,6 +12,7 @@ public class SimpleChessBoard {
     private static CirclePanel selectedPanel = null;
     private static final int BOARD_SIZE = 8;
     private static CirclePanel[][] board = new CirclePanel[BOARD_SIZE][BOARD_SIZE];
+    private static JFrame frame; // Move this outside launchGame()
 
     public static void launchGame(String player1, String player2) {
         SwingUtilities.invokeLater(() -> {
@@ -21,7 +22,7 @@ public class SimpleChessBoard {
             playerColor = "Black";
 
             CheckerGameLogic gameLogic = new CheckerGameLogic(board);//pass board
-            JFrame frame = new JFrame("Checker Game");
+            frame = new JFrame("Checker Game");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 650);
 
@@ -73,11 +74,30 @@ public class SimpleChessBoard {
             resetButton.setFont(new Font("SansSerif",Font.PLAIN,14));
             resetButton.setFocusPainted(false);
             resetButton.addActionListener(e -> {
-                JOptionPane.showMessageDialog(null,
-                        "This is Resett Button",
-                        "Restart",
-                        JOptionPane.PLAIN_MESSAGE);
+                int result = JOptionPane.showConfirmDialog(null,
+                        "Do you want to reset and choose new player names?",
+                                "Reset Game",
+                                 JOptionPane.YES_NO_OPTION);
 
+                if(result == JOptionPane.YES_OPTION){
+                    System.out.println("Yes");
+
+                    //Close current game window
+
+
+                    //Receive new players names again
+                    String[] newPlayers = new String[2];
+                    String p1 = JOptionPane.showInputDialog(frame, "Enter name for Player1:","Player Setup",JOptionPane.PLAIN_MESSAGE);
+                    if(p1 == null || p1.trim().isEmpty()) p1 = "Player 1";
+
+                    String p2 = JOptionPane.showInputDialog(frame, "Enter name for Player2:","Player Setup",JOptionPane.PLAIN_MESSAGE);
+                    if(p2 == null || p2.trim().isEmpty()) p2 = "Player 2";
+                    frame.dispose();
+
+                    newPlayers [0] = p1;
+                    newPlayers [1] = p2;
+                    launchGame(newPlayers[0], newPlayers[1]);
+                }
             });
 
             JButton endAndCheckTheWinnerButton = new JButton("Check Winner To End");
@@ -86,6 +106,10 @@ public class SimpleChessBoard {
             endAndCheckTheWinnerButton.addActionListener(e -> {
                 Color winner = gameLogic.checkWinner();
                 disPlayingWinningState(winner);
+                if(winner.equals(Color.BLACK) || winner.equals(Color.BLUE) || winner.equals(Color.CYAN)){
+                    BoardBuilder.resetBoard(board,gameLogic);
+                    resetGameToOriginalState(player1,player2);
+                }
             });
 
 
@@ -102,6 +126,8 @@ public class SimpleChessBoard {
             doneButton.addActionListener(e -> {
                 boolean forceEndTurn = gameLogic.getForceEndTurn();
                 boolean turnAble = gameLogic.getTurnAble();
+                Color winner = gameLogic.checkWinner();
+
 
                 if(turnAble){
                     MakeDoneButtonAction(gameLogic);
@@ -112,6 +138,11 @@ public class SimpleChessBoard {
                             JOptionPane.WARNING_MESSAGE);
                 }else {
                     MakeDoneButtonAction(gameLogic);
+                }
+
+                if(winner.equals(Color.BLACK) || winner.equals(Color.BLUE) || winner.equals(Color.CYAN)){
+                    BoardBuilder.resetBoard(board,gameLogic);
+                    resetGameToOriginalState(player1,player2);
                 }
             });
 
@@ -156,22 +187,28 @@ public class SimpleChessBoard {
 
 
     private static void disPlayingWinningState(Color winner) {
+
         if(winner != null){
             if(winner.equals(PLAYER1_COLOR)){
                 JOptionPane.showMessageDialog(null,
-                        player1Name + " (Black) wins the game!",
+                        player1Name+" (Black) "+" wins the game!",
                         "Game Over",
                         JOptionPane.INFORMATION_MESSAGE);
-            } else if (winner.equals(PLAYER2_COLOR)) {
+            }else if (winner.equals(PLAYER2_COLOR)){
                 JOptionPane.showMessageDialog(null,
-                        player2Name + " (Blue) wins the game!",
+                        player2Name+" (Blue) "+" wins the game!",
                         "Game Over",
                         JOptionPane.INFORMATION_MESSAGE);
-            } else {
+            } else if (winner.equals(Color.CYAN)) {
                 JOptionPane.showMessageDialog(null,
-                        "Oops!!! Something went wrong in winner checking logic.",
+                        "It is a tie. ",
                         "Game Over",
-                        JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else{
+                JOptionPane.showMessageDialog(null,
+                        "Oops!!! Something wrongs with winner Checking process",
+                        "Game Over",
+                        JOptionPane.INFORMATION_MESSAGE);
             }
         } else {
             JOptionPane.showMessageDialog(null,
@@ -210,28 +247,7 @@ public class SimpleChessBoard {
 
         Color winner = gameLogic.checkWinner();
         if(winner != null){
-            if(winner.equals(PLAYER1_COLOR)){
-                JOptionPane.showMessageDialog(null,
-                        player1Name+" (Black) "+" wins the game!",
-                        "Game Over",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }else if (winner.equals(PLAYER2_COLOR)){
-                JOptionPane.showMessageDialog(null,
-                        player2Name+" (Blue) "+" wins the game!",
-                        "Game Over",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } else if (winner.equals(Color.CYAN)) {
-                JOptionPane.showMessageDialog(null,
-                        "It is a tie. ",
-                        "Game Over",
-                        JOptionPane.INFORMATION_MESSAGE);
-            } else{
-                JOptionPane.showMessageDialog(null,
-                        "Oops!!! Something wrongs with winner Checking process",
-                        "Game Over",
-                        JOptionPane.INFORMATION_MESSAGE);
-            }
-
+            disPlayingWinningState(winner);
         }else{
             switchTurn();                      // Now switch turn
         }

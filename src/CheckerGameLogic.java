@@ -195,6 +195,8 @@ public class CheckerGameLogic {
         int blueCount = 0;
         boolean blackCanMove = false;
         boolean blueCanMove = false;
+        int blackKingCount = 0;
+        int blueKingCount = 0;
 
         for (int row = 0; row < board.length; row++) {
             for (int col = 0; col < board[row].length; col++) {
@@ -205,28 +207,33 @@ public class CheckerGameLogic {
                     if (!blackCanMove && hasAnyValidMove(panel)) {
                         blackCanMove = true;
                     }
+                    if (panel.isKing()) {
+                        blackKingCount++;
+                    }
                 } else if (Color.BLUE.equals(c)) {
                     blueCount++;
                     if (!blueCanMove && hasAnyValidMove(panel)) {
                         blueCanMove = true;
                     }
+                    if (panel.isKing()) {
+                        blueKingCount++;
+                    }
                 }
             }
         }
-        if (blackCount == 0 || !blackCanMove) return Color.BLUE;
-        if (blueCount == 0 || !blueCanMove) return Color.BLACK;
+        if ((blackCount == 0 || !blackCanMove || (blackCount == 0 && blueCount > 0) || (blackCount <= 3 && blueCount >= 5))) {
+            return Color.BLUE;
+        }
 
-        if (blackCount == 0 && blueCount > 0) {
-            return Color.BLUE;
-        } else if (blueCount == 0 && blackCount > 0) {
+        if ((blueCount == 0 || !blueCanMove || (blueCount == 0 && blackCount > 0) || (blueCount <= 3 && blackCount >= 5))) {
             return Color.BLACK;
-        } else if (blackCount <= 1 && blueCount >= 3) {
-            return Color.BLUE;
-        } else if (blueCount <= 1 && blackCount >= 3) {
-            return Color.BLACK;
-        }else if(blueCount == blackCount && blueCount <= 3 && blackCount <=3) {
+        }
+
+        if (blueCount == blackCount && blueCount <= 3 && blackCount <= 3 || (blackCount == blackKingCount && blueCount == blueKingCount)) {
             return Color.CYAN;
         }
+
+
         return null;
     }
 

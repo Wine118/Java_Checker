@@ -4,7 +4,7 @@ import java.awt.*;
 
 public class CirclePanel extends JPanel {
     private Color color;
-    private final int row, col;
+    private int row, col;
     private boolean isKing = false;
 
 
@@ -26,6 +26,15 @@ public class CirclePanel extends JPanel {
     public Color getCircleColor() {
         return color;
     }
+
+    public void setRow(int row) {
+        this.row = row;
+    }
+
+    public void setCol(int col) {
+        this.col = col;
+    }
+
 
     public int getRow() {
         return row;

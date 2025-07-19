@@ -61,18 +61,20 @@ public class SimpleChessBoard {
             restartButton.setFont(new Font("SansSerif",Font.PLAIN,14));
             restartButton.setFocusPainted(false);
             restartButton.addActionListener(e -> {
-                JOptionPane.showMessageDialog(null,
-                        "This is Reset Button",
-                        "Reset",
-                        JOptionPane.PLAIN_MESSAGE);
+                BoardBuilder.resetBoard(board,gameLogic);
+
+                resetGameToOriginalState(player1,player2);
+
+
+
             });
 
             JButton resetButton = new JButton("Reset");
             resetButton.setFont(new Font("SansSerif",Font.PLAIN,14));
             resetButton.setFocusPainted(false);
-            restartButton.addActionListener(e -> {
+            resetButton.addActionListener(e -> {
                 JOptionPane.showMessageDialog(null,
-                        "This is Restart Button",
+                        "This is Resett Button",
                         "Restart",
                         JOptionPane.PLAIN_MESSAGE);
 
@@ -83,30 +85,7 @@ public class SimpleChessBoard {
             endAndCheckTheWinnerButton.setFocusPainted(false);
             endAndCheckTheWinnerButton.addActionListener(e -> {
                 Color winner = gameLogic.checkWinner();
-
-                if(winner != null){
-                    if(winner.equals(PLAYER1_COLOR)){
-                        JOptionPane.showMessageDialog(null,
-                                player1Name + " (Black) wins the game!",
-                                "Game Over",
-                                JOptionPane.INFORMATION_MESSAGE);
-                    } else if (winner.equals(PLAYER2_COLOR)) {
-                        JOptionPane.showMessageDialog(null,
-                                player2Name + " (Blue) wins the game!",
-                                "Game Over",
-                                JOptionPane.INFORMATION_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(null,
-                                "Oops!!! Something went wrong in winner checking logic.",
-                                "Game Over",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(null,
-                            "Winner can't be decided yet,\nDo you want to restart? Then press Restart button.",
-                            "Warning",
-                            JOptionPane.WARNING_MESSAGE);
-                }
+                disPlayingWinningState(winner);
             });
 
 
@@ -164,6 +143,42 @@ public class SimpleChessBoard {
             frame.repaint();
 
         });
+    }
+
+    private static void resetGameToOriginalState(String player1, String player2) {
+        player1Name = player1;
+        player2Name = player2;
+        currentPlayer = player1Name;//Start with player 1
+        playerColor = "Black";
+        playerturnLabel.setText(currentPlayer + "'s Turn (" + playerColor + ")");
+    }
+
+
+
+    private static void disPlayingWinningState(Color winner) {
+        if(winner != null){
+            if(winner.equals(PLAYER1_COLOR)){
+                JOptionPane.showMessageDialog(null,
+                        player1Name + " (Black) wins the game!",
+                        "Game Over",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else if (winner.equals(PLAYER2_COLOR)) {
+                JOptionPane.showMessageDialog(null,
+                        player2Name + " (Blue) wins the game!",
+                        "Game Over",
+                        JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Oops!!! Something went wrong in winner checking logic.",
+                        "Game Over",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Winner can't be decided yet,\nDo you want to restart? Then press Restart button.",
+                    "Warning",
+                    JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     public static void switchTurn() {

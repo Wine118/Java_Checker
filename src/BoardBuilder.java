@@ -41,4 +41,39 @@ public class BoardBuilder {
         }
 
     }
+
+    public static void resetBoard(CirclePanel[][] board, CheckerGameLogic gameLogic) {
+        for(int row=0; row<8; row++){
+            for(int col = 0; col<8; col++){
+                CirclePanel piece = board[row][col];
+
+                //Reset king status
+                piece.setKing(false);
+
+                //Reset position
+                piece.setRow(row);
+                piece.setCol(col);
+
+                //Background color(unchanged)
+                Color squareColor = ((row+col)%2==0)? Color.WHITE : new Color(181,136,99);
+                piece.setBackground(squareColor);
+
+                //Set piece color for dark squares
+                if((row + col) % 2 != 0){
+                    if(row < 3){
+                        piece.setCircleColor(Color.BLACK);
+                    } else if (row > 4) {
+                        piece.setCircleColor(Color.BLUE);
+                    } else {
+                        piece.setCircleColor(null);
+                    }
+                }else{
+                    piece.setCircleColor(null);
+                }
+                piece.repaint();
+            }
+        }
+        //Reset game logic (selection, turn, etc.)
+        gameLogic.resetGameState();
+    }
 }

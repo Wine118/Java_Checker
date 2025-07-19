@@ -35,21 +35,84 @@ public class CheckerGameLogic {
         }
     }
 
+    private void attemptMoveOrCapture(CirclePanel clickedPanel){
+        int fromRow = selectedPanel.getRow();
+        int fromCol = selectedPanel.getCol();
+        int toRow = clickedPanel.getRow();
+        int toCol = clickedPanel.getCol();
+        int rowDiff = Math.abs(toRow - fromRow);
+        int colDiff = Math.abs(toCol - fromCol);
 
+        Color pieceColor = selectedPanel.getCircleColor();
+        boolean isKing = selectedPanel.isKing();
 
-    public void resetSelection() {
-        selectedPanel = null;
-    }
+        // Determine move direction for non-king
+        int direction = pieceColor.equals(Color.BLACK) ? 1 : -1;
 
-    private boolean isInBounds(int row, int col) {
-        return row >= 0 && row < 8 && col >= 0 && col < 8;
-    }
-
-    private CirclePanel findPanelByCoord(int row, int col) {
-        if (isInBounds(row, col)) {
-            return board[row][col];
+        // Normal forward move
+        if (rowDiff == 1 && colDiff == 1 && (!isKing && (toRow - fromRow == direction) || isKing)&&
+                clickedPanel.getCircleColor() == null ) {
+            clickedPanel.setCircleColor(pieceColor);
+            clickedPanel.setKing(isKing); // retain king status
+            selectedPanel.setCircleColor(null);
+            selectedPanel.setKing(false);
+            selectedPanel = null;
+            forceEndTurn = true;
+            promoteToKing(clickedPanel);
+            return;
         }
-        return null;
+
+        // Attempt capture move
+        if (rowDiff == 2 && colDiff == 2) {
+            attemptCapture(fromRow, fromCol, toRow, toCol, clickedPanel);
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "Invalid move. You can only move diagonally.",
+                    "Invalid Move",
+                    JOptionPane.WARNING_MESSAGE);
+            selectedPanel = null;
+        }
+    }
+
+    private void attemptCapture(int fromRow, int fromCol, int toRow, int toCol, CirclePanel clickedPanel) {
+        int midRow = (fromRow + toRow) / 2;
+        int midCol = (fromCol + toCol) / 2;
+        CirclePanel mid = findPanelByCoord(midRow, midCol);
+        CirclePanel dest = findPanelByCoord(toRow, toCol);
+        Color pieceColor = selectedPanel.getCircleColor();
+        boolean isKing = selectedPanel.isKing();
+        // Determine move direction for non-king
+        int direction = pieceColor.equals(Color.BLACK) ? 2 : -2;
+
+        if (mid != null && dest != null) {//Both middle cell and destination cell exist
+            Color midColor = mid.getCircleColor();
+            Color destColor = dest.getCircleColor();
+            if ( (midColor != null && !midColor.equals(pieceColor)&& destColor==null&& isKing) ||
+                    (midColor != null && !midColor.equals(pieceColor)&& destColor==null && !isKing && (toRow - fromRow == direction))) {
+                // Perform capture
+                clickedPanel.setCircleColor(pieceColor);
+                clickedPanel.setKing(selectedPanel.isKing());
+                selectedPanel.setCircleColor(null);
+                selectedPanel.setKing(false);
+                mid.setCircleColor(null);
+
+                promoteToKing(clickedPanel);
+
+                if (canCaptureFrom(clickedPanel)) {
+                    selectedPanel = clickedPanel;
+                    turnAble = true;
+                } else {
+                    selectedPanel = null;
+                    forceEndTurn = true;
+                }
+            } else {
+                JOptionPane.showMessageDialog(null,
+                        "Invalid capture. No opponent piece to jump over.",
+                        "Invalid Move",
+                        JOptionPane.WARNING_MESSAGE);
+                selectedPanel = null;
+            }
+        }
     }
 
     public boolean canCaptureFrom(CirclePanel currentPanel){
@@ -80,8 +143,27 @@ public class CheckerGameLogic {
                 return true;
             }
         }
-      return false;
+        return false;
     }
+
+
+
+    public void resetSelection() {
+        selectedPanel = null;
+    }
+
+    private boolean isInBounds(int row, int col) {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+
+    private CirclePanel findPanelByCoord(int row, int col) {
+        if (isInBounds(row, col)) {
+            return board[row][col];
+        }
+        return null;
+    }
+
+
 
     public void clearForceEndTurn() {
         forceEndTurn = false;
@@ -158,85 +240,6 @@ public class CheckerGameLogic {
         }
     }
 
-
-
-
-    private void attemptMoveOrCapture(CirclePanel clickedPanel){
-        int fromRow = selectedPanel.getRow();
-        int fromCol = selectedPanel.getCol();
-        int toRow = clickedPanel.getRow();
-        int toCol = clickedPanel.getCol();
-        int rowDiff = Math.abs(toRow - fromRow);
-        int colDiff = Math.abs(toCol - fromCol);
-
-        Color pieceColor = selectedPanel.getCircleColor();
-        boolean isKing = selectedPanel.isKing();
-
-        // Determine move direction for non-king
-        int direction = pieceColor.equals(Color.BLACK) ? 1 : -1;
-
-        // Normal forward move
-        if (rowDiff == 1 && colDiff == 1 && (!isKing && (toRow - fromRow == direction) || isKing)&&
-             clickedPanel.getCircleColor() == null ) {
-            clickedPanel.setCircleColor(pieceColor);
-            clickedPanel.setKing(isKing); // retain king status
-            selectedPanel.setCircleColor(null);
-            selectedPanel.setKing(false);
-            selectedPanel = null;
-            forceEndTurn = true;
-            promoteToKing(clickedPanel);
-            return;
-        }
-
-        // Attempt capture move
-        if (rowDiff == 2 && colDiff == 2) {
-            attemptCapture(fromRow, fromCol, toRow, toCol, clickedPanel);
-        } else {
-            JOptionPane.showMessageDialog(null,
-                    "Invalid move. You can only move diagonally.",
-                    "Invalid Move",
-                    JOptionPane.WARNING_MESSAGE);
-            selectedPanel = null;
-        }
-    }
-
-    private void attemptCapture(int fromRow, int fromCol, int toRow, int toCol, CirclePanel clickedPanel) {
-        int midRow = (fromRow + toRow) / 2;
-        int midCol = (fromCol + toCol) / 2;
-        CirclePanel mid = findPanelByCoord(midRow, midCol);
-        CirclePanel dest = findPanelByCoord(toRow, toCol);
-        Color pieceColor = selectedPanel.getCircleColor();
-
-        if (mid != null && dest != null) {//Both middle cell and destination cell exist
-            Color midColor = mid.getCircleColor();
-            Color destColor = dest.getCircleColor();
-            if (midColor != null && !midColor.equals(pieceColor)&& destColor==null) {
-                // Perform capture
-                clickedPanel.setCircleColor(pieceColor);
-                clickedPanel.setKing(selectedPanel.isKing());
-                selectedPanel.setCircleColor(null);
-                selectedPanel.setKing(false);
-                mid.setCircleColor(null);
-
-                promoteToKing(clickedPanel);
-
-                if (canCaptureFrom(clickedPanel)) {
-                    selectedPanel = clickedPanel;
-                    turnAble = true;
-                } else {
-                    selectedPanel = null;
-                    forceEndTurn = true;
-                }
-            } else {
-                JOptionPane.showMessageDialog(null,
-                        "Invalid capture. No opponent piece to jump over.",
-                        "Invalid Move",
-                        JOptionPane.WARNING_MESSAGE);
-                selectedPanel = null;
-            }
-        }
-    }
-
     private boolean hasAnyValidMove(CirclePanel panel) {
         if (panel.getCircleColor() == null) return false;
 
@@ -288,7 +291,11 @@ public class CheckerGameLogic {
     }
 
 
-
+    public void resetGameState() {
+        selectedPanel = null;
+        forceEndTurn = false;
+        turnAble = false;
+    }
 }
 
 

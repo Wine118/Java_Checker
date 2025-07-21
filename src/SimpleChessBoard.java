@@ -13,6 +13,8 @@ public class SimpleChessBoard {
     private static final int BOARD_SIZE = 8;
     private static CirclePanel[][] board = new CirclePanel[BOARD_SIZE][BOARD_SIZE];
     private static JFrame frame; // Move this outside launchGame()
+    private static boolean isAI=false;
+    private static CheckerGameLogic gameLogic;
 
     public static void launchGame(String player1, String player2) {
         SwingUtilities.invokeLater(() -> {
@@ -21,7 +23,8 @@ public class SimpleChessBoard {
             currentPlayer = player1Name;//Start with player 1
             playerColor = "Black";
 
-            CheckerGameLogic gameLogic = new CheckerGameLogic(board);//pass board
+
+            gameLogic = new CheckerGameLogic(board);//pass board
             frame = new JFrame("Checker Game");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 650);
@@ -186,7 +189,7 @@ public class SimpleChessBoard {
 
 
 
-    private static void disPlayingWinningState(Color winner) {
+    public static void disPlayingWinningState(Color winner) {
 
         if(winner != null){
             if(winner.equals(PLAYER1_COLOR)){
@@ -222,9 +225,14 @@ public class SimpleChessBoard {
         if(currentPlayer.equals(player1Name)){
             currentPlayer = player2Name;
             playerColor = "Blue";
+            isAI = currentPlayer.equalsIgnoreCase("AI");
+            if(isAI){
+                gameLogic.makeAIMove();
+            }
         }else {
             currentPlayer = player1Name;
             playerColor = "Black";
+            isAI = false;
         }
         playerturnLabel.setText(currentPlayer+"'s Turn"+" ("+playerColor+")");
     }
@@ -251,5 +259,16 @@ public class SimpleChessBoard {
         }else{
             switchTurn();                      // Now switch turn
         }
+    }
+
+    public static boolean isIsAI() {
+        return isAI;
+    }
+
+    public static void restartTheGame(CheckerGameLogic gameLogic) {
+
+        BoardBuilder.resetBoard(board,gameLogic);
+        resetGameToOriginalState(player1Name,player2Name);
+
     }
 }

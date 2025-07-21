@@ -1,5 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.List;       // ✅ Correct
+import java.util.ArrayList;  // ✅ Needed for `new ArrayList<>();`
+
 
 public class CheckerGameLogic {
     private CirclePanel[][] board;
@@ -19,6 +22,13 @@ public class CheckerGameLogic {
             selectedPanel = null;
             return;
         }
+
+        if (SimpleChessBoard.isIsAI() && SimpleChessBoard.getCurrentPlayerColor().equals(Color.BLUE)) {
+            return; // Ignore user clicks during AI turn
+        }
+
+
+
 
         if(selectedPanel==null && clickedPanel.getCircleColor()!=null){//First Click
             Color currentColor = SimpleChessBoard.getCurrentPlayerColor();
@@ -302,6 +312,184 @@ public class CheckerGameLogic {
         selectedPanel = null;
         forceEndTurn = false;
         turnAble = false;
+    }
+
+    public List<Move> getValidMoves(CirclePanel panel) {
+        List<Move> moves = new ArrayList<>();
+
+        if(panel.getCircleColor() == null) return moves;
+
+        int row = panel.getRow();
+        int col = panel.getCol();
+        Color color = panel.getCircleColor();
+        boolean isKing = panel.isKing();
+
+        int[][] moveDirs = isKing
+                ? new int[][]{{-1, -1}, {-1, 1}, {1, -1}, {1, 1}}
+                : color.equals(Color.BLACK)
+                ? new int[][]{{1, -1}, {1, 1}}
+                : new int[][]{{-1, -1}, {-1, 1}};
+
+        int[][] captureDirs = isKing
+                ? new int[][]{{-2, -2}, {-2, 2}, {2, -2}, {2, 2}}
+                : color.equals(Color.BLACK)
+                ? new int[][]{{2, -2}, {2, 2}}
+                : new int[][]{{-2, -2}, {-2, 2}};
+
+        // Add normal moves
+        for (int[] d : moveDirs) {
+            int newRow = row + d[0];
+            int newCol = col + d[1];
+            CirclePanel dest = findPanelByCoord(newRow, newCol);
+            if (dest != null && dest.getCircleColor() == null) {
+                moves.add(new Move(row, col, newRow, newCol));
+            }
+        }
+
+        // Add capture moves
+        for (int[] d : captureDirs) {
+            int midRow = row + d[0] / 2;
+            int midCol = col + d[1] / 2;
+            int newRow = row + d[0];
+            int newCol = col + d[1];
+
+            CirclePanel mid = findPanelByCoord(midRow, midCol);
+            CirclePanel dest = findPanelByCoord(newRow, newCol);
+
+            if (mid != null && dest != null &&
+                    dest.getCircleColor() == null &&
+                    mid.getCircleColor() != null &&
+                    !mid.getCircleColor().equals(color)) {
+
+                moves.add(new Move(row, col, newRow, newCol));
+            }
+        }
+
+        return moves;
+    }
+
+    public void makeAIMove() {
+        List<CirclePanel> bluePieces = getAllPieces(Color.BLUE);
+        Move bestCapture = null;
+        CirclePanel capturingPiece = null;
+
+        //First, look for a capture move
+        for(CirclePanel piece: bluePieces){
+            List<Move> moves = getValidMoves(piece);
+            for(Move move : moves){
+                if(Math.abs(move.getToRow()-move.getFromRow()) == 2) {
+                    bestCapture = move;
+                    capturingPiece = piece;
+                    break;//Take the first capture found
+                }
+            }
+            if(bestCapture != null) break;
+        }
+
+        //If capture found, use it
+        if(bestCapture != null){
+            movePiece(bestCapture);
+            //Check for chain capture
+
+            CirclePanel finalCapturingPiece = capturingPiece;
+            SwingUtilities.invokeLater(() -> tryChainCapture(finalCapturingPiece));
+            return;
+        }
+
+        //otherwis, just do the first available normal move
+        for(CirclePanel piece: bluePieces) {
+            List<Move> validMoves = getValidMoves(piece);
+            if(!validMoves.isEmpty()) {
+                Move move = validMoves.get(0); // pick first valid move
+                movePiece(move);
+                break;
+            }
+        }
+    }
+
+
+
+    public List<CirclePanel> getAllPieces(Color color){
+        List<CirclePanel> pieces = new ArrayList<>();
+        for(int row = 0; row<board.length; row++){
+            for(int col = 0; col < board.length; col++){
+                CirclePanel p = board[row][col];
+                if(color.equals(p.getCircleColor())) {
+                    pieces.add(p);
+                }
+            }
+        }
+        return pieces;
+    }
+
+    public void movePiece(Move move){
+        CirclePanel from = board[move.getFromRow()][move.getFromCol()];
+        CirclePanel to = board[move.getToRow()][move.getToCol()];
+
+        Color color = from.getCircleColor();
+        boolean isKing = from.isKing();
+
+        // Handle capture
+        int rowDiff = move.getToRow() - move.getFromRow();
+        int colDiff = move.getToCol() - move.getFromCol();
+
+        if(Math.abs(rowDiff) == 1 && Math.abs(colDiff) == 1){
+            from.setCircleColor(null);
+            from.setKing(false);
+
+            to.setCircleColor(color);
+            to.setKing(isKing);
+        } else if (Math.abs(rowDiff) == 2 && Math.abs(colDiff) == 2) {
+            int capturedRow = move.getFromRow() + rowDiff / 2;
+            int capturedCol = move.getFromCol() + colDiff / 2;
+            CirclePanel captured = board[capturedRow][capturedCol];
+            captured.setCircleColor(null);
+            captured.setKing(false);
+            from.setCircleColor(null);
+            from.setKing(false);
+
+            to.setCircleColor(color);
+            to.setKing(isKing);
+        }
+
+
+        // Check for promotion
+        if (color.equals(Color.BLACK) && move.getToRow() == 7) {
+            to.setKing(true);
+        } else if (color.equals(Color.BLUE) && move.getToRow() == 0) {
+            to.setKing(true);
+        }
+
+        SimpleChessBoard.switchTurn();
+        //If AI is on and it's AI's turn now, call AI again
+        if(SimpleChessBoard.isIsAI()&&SimpleChessBoard.getCurrentPlayerColor()==Color.BLUE){
+            makeAIMove();
+        }
+
+        //Optionally check winner
+        Color winner = checkWinner();
+        if(winner != null){
+           SimpleChessBoard.disPlayingWinningState(winner);
+        }
+
+        if(winner.equals(Color.BLACK) || winner.equals(Color.BLUE) || winner.equals(Color.CYAN)){
+            CheckerGameLogic gameLogic = null;
+            SimpleChessBoard.restartTheGame(gameLogic);
+        }
+    }
+
+    private void tryChainCapture(CirclePanel piece) {
+        List<Move> chainMoves = getValidMoves(piece);
+        for(Move move: chainMoves) {
+            if(Math.abs(move.getToRow() - move.getFromRow()) == 2) {
+                movePiece(move);
+                SwingUtilities.invokeLater(() -> tryChainCapture(piece));
+                return;
+            }
+        }
+
+        //No more jumps -> switch turn
+        SimpleChessBoard.switchTurn();
     }
 }
 

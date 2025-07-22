@@ -1,7 +1,8 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.List;       // ✅ Correct
-import java.util.ArrayList;  // ✅ Needed for `new ArrayList<>();`
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 
 public class CheckerGameLogic {
@@ -336,16 +337,6 @@ public class CheckerGameLogic {
                 ? new int[][]{{2, -2}, {2, 2}}
                 : new int[][]{{-2, -2}, {-2, 2}};
 
-        // Add normal moves
-        for (int[] d : moveDirs) {
-            int newRow = row + d[0];
-            int newCol = col + d[1];
-            CirclePanel dest = findPanelByCoord(newRow, newCol);
-            if (dest != null && dest.getCircleColor() == null) {
-                moves.add(new Move(row, col, newRow, newCol));
-            }
-        }
-
         // Add capture moves
         for (int[] d : captureDirs) {
             int midRow = row + d[0] / 2;
@@ -365,45 +356,78 @@ public class CheckerGameLogic {
             }
         }
 
+        // Add normal moves
+        for (int[] d : moveDirs) {
+            int newRow = row + d[0];
+            int newCol = col + d[1];
+            CirclePanel dest = findPanelByCoord(newRow, newCol);
+            if (dest != null && dest.getCircleColor() == null) {
+                moves.add(new Move(row, col, newRow, newCol));
+            }
+        }
+
         return moves;
     }
 
     public void makeAIMove() {
         List<CirclePanel> bluePieces = getAllPieces(Color.BLUE);
-        Move bestCapture = null;
+        List<Move> bestCaptures = new ArrayList<>();
         CirclePanel capturingPiece = null;
+        int longestChain = 0;
 
-        //First, look for a capture move
+        //Step 1: Search all capture moves
         for(CirclePanel piece: bluePieces){
             List<Move> moves = getValidMoves(piece);
             for(Move move : moves){
                 if(Math.abs(move.getToRow()-move.getFromRow()) == 2) {
-                    bestCapture = move;
-                    capturingPiece = piece;
-                    break;//Take the first capture found
+                    int chainLength = simulateChainLength(piece, move);
+                    boolean becomesKing =(move.getToRow()==0 && !piece.isKing());
+
+                    //Prioritize by longest chain or kinging
+                    if(chainLength > longestChain){
+                        longestChain = chainLength;
+                        bestCaptures.clear();
+                        bestCaptures.add(move);
+                    }else if(chainLength == longestChain && becomesKing){
+                        bestCaptures.add(move);
+                    }else if(chainLength == longestChain){
+                        bestCaptures.add(move);
+                    }
                 }
             }
-            if(bestCapture != null) break;
+
         }
 
-        //If capture found, use it
-        if(bestCapture != null){
-            movePiece(bestCapture);
-            //Check for chain capture
-
-            CirclePanel finalCapturingPiece = capturingPiece;
-            SwingUtilities.invokeLater(() -> tryChainCapture(finalCapturingPiece));
+        //Step 2 : Execute best capture if available
+        if(!bestCaptures.isEmpty()){
+            Move selected = bestCaptures.get(new Random().nextInt(bestCaptures.size()));
+            CirclePanel fromPanel = findPanelByCoord(selected.getFromRow(),selected.getFromCol());
+            movePiece(selected);
+            SwingUtilities.invokeLater(() -> tryChainCapture(fromPanel));
             return;
         }
 
-        //otherwis, just do the first available normal move
+        //Step 3: No captures, just make a normal move(prefer safe ones)
+        List<Move> allSafeMoves = new ArrayList<>();
+        List<Move> allMoves = new ArrayList<>();
+
         for(CirclePanel piece: bluePieces) {
             List<Move> validMoves = getValidMoves(piece);
-            if(!validMoves.isEmpty()) {
-                Move move = validMoves.get(0); // pick first valid move
-                movePiece(move);
-                break;
+            for(Move move: validMoves){
+                allMoves.add(move);
+                if(isMoveSafe(move, piece.getCircleColor())){
+                    allSafeMoves.add(move);
+                }
             }
+        }
+
+        //Prefer safe move
+        if(!allSafeMoves.isEmpty()){
+            Move selected = allSafeMoves.get(new Random().nextInt(allSafeMoves.size()));
+            movePiece(selected);
+        } else if (!allMoves.isEmpty()) {
+            Move selected = allMoves.get(new Random().nextInt(allMoves.size()));
+            movePiece(selected);
         }
     }
 
@@ -428,6 +452,8 @@ public class CheckerGameLogic {
 
         Color color = from.getCircleColor();
         boolean isKing = from.isKing();
+        boolean becomesKing = false;
+
 
         // Handle capture
         int rowDiff = move.getToRow() - move.getFromRow();
@@ -490,6 +516,66 @@ public class CheckerGameLogic {
 
         //No more jumps -> switch turn
         SimpleChessBoard.switchTurn();
+    }
+
+    private int simulateChainLength(CirclePanel piece, Move move){
+        //Temporarily perform the move on a copy of the board and count possible follow-up captures
+        int chain = 1;
+        int newRow = move.getToRow();
+        int newCol = move.getToCol();
+        boolean isKing = piece.isKing();
+
+        int[][] dirs = isKing
+                ? new int[][]{{2,-2},{2,2},{-2,-2},{-2,2}}
+                : new int[][] {{-2,-2},{-2,2}};
+
+        for(int[] d: dirs){
+            int midRow = newRow + d[0] / 2;
+            int midCol = newCol + d[1] / 2;
+            int endRow = newRow + d[0];
+            int endCol = newCol + d[1];
+
+            CirclePanel mid = findPanelByCoord(midRow, midCol);
+            CirclePanel dest = findPanelByCoord(endRow, endCol);
+
+            if(mid != null && dest != null &&
+               mid.getCircleColor() != null &&
+               !mid.getCircleColor().equals(piece.getCircleColor()) &&
+               dest.getCircleColor() == null) {
+                //Found additional chain capture
+                chain += 1;
+            }
+        }
+        return chain;
+
+
+    }
+
+    private boolean isMoveSafe(Move move, Color color) {
+        int row = move.getToRow();
+        int col = move.getToCol();
+
+        int[][] enemyDirs = color.equals(Color.BLUE)
+                ? new int[][]{{-2,-2},{-2,2}}
+                : new int[][]{{2,-2},{2,2}};
+
+        for(int[] d: enemyDirs){
+            int enemyRow = row + d[0];
+            int enemyCol = col + d[1];
+            int midRow = row + d[0]/2;
+            int midCol = col + d[1]/2;
+
+            CirclePanel enemy = findPanelByCoord(enemyRow,enemyCol);
+            CirclePanel mid = findPanelByCoord(midRow,midCol);
+
+            if(enemy != null && mid != null &&
+               enemy.getCircleColor() != null &&
+               !enemy.getCircleColor().equals(color)&&
+               mid.getRow() == row && mid.getCol()==col){
+                return false; // Enemy can capture this destination
+            }
+        }
+        return true;
     }
 }
 

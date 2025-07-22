@@ -5,8 +5,6 @@ public class Main {
         //Show welcome screen and get player names
         String[] players = WelcomeWindow.show();
 
-        //Checking AI
-        boolean isAI = players[1].equalsIgnoreCase("AI");
 
         //Start the actual checker game with those names
         SimpleChessBoard.launchGame(players[0],players[1]);

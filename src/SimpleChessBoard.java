@@ -143,7 +143,9 @@ public class SimpleChessBoard {
                     MakeDoneButtonAction(gameLogic);
                 }
 
-                if(winner.equals(Color.BLACK) || winner.equals(Color.BLUE) || winner.equals(Color.CYAN)){
+                if(winner == null){
+                    return;
+                }else if(winner.equals(Color.BLACK) || winner.equals(Color.BLUE) || winner.equals(Color.CYAN)){
                     BoardBuilder.resetBoard(board,gameLogic);
                     resetGameToOriginalState(player1,player2);
                 }

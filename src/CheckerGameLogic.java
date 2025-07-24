@@ -419,13 +419,13 @@ public class CheckerGameLogic {
 
 
             // Print all scored moves
-            System.out.println("Captured Moves:" + "All equal "+allEqual);
-            for (ScoredMove ms : capturedMoves) {
-                System.out.println(ms);
-            }
-
-            // Print the best move
-            System.out.println("Best Move: " + best);
+//            System.out.println("Captured Moves:" + "All equal "+allEqual);
+//            for (ScoredMove ms : capturedMoves) {
+//                System.out.println(ms);
+//            }
+//
+//            // Print the best move
+//            System.out.println("Best Move: " + best);
         } else {
             // Step 3: Evaluate all normal moves with safety
             List<ScoredMove> normalMoves = new ArrayList<>();
@@ -461,14 +461,14 @@ public class CheckerGameLogic {
                 }
 
 
-                System.out.println("Normal Moves: All equal "+allEqual);
-                for (ScoredMove ms : normalMoves) {
-                    System.out.println(ms);
-                }
-
-// Print the best move
-                System.out.println("Best Move: " + best);
-                return;
+//                System.out.println("Normal Moves: All equal "+allEqual);
+//                for (ScoredMove ms : normalMoves) {
+//                    System.out.println(ms);
+//                }
+//
+//// Print the best move
+//                System.out.println("Best Move: " + best);
+//                return;
 
             }
         }

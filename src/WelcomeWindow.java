@@ -61,7 +61,8 @@ public class WelcomeWindow {
 
             playButton.addActionListener(e -> {
                 String p1 = JOptionPane.showInputDialog(welcomeFrame, "Enter name for Player1:","Player Setup",JOptionPane.PLAIN_MESSAGE);
-                if(p1 == null || p1.trim().isEmpty()) p1 = "Player 1";
+                if(p1 == null || p1.trim().isEmpty() || p1.trim().equalsIgnoreCase("AI")) p1 = "Player 1";
+
 
                 String p2 = JOptionPane.showInputDialog(welcomeFrame, "Enter name for Player2:","Player Setup",JOptionPane.PLAIN_MESSAGE);
                 if(p2 == null || p2.trim().isEmpty()) p2 = "Player 2";

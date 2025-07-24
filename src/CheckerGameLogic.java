@@ -1,7 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 
 
 public class CheckerGameLogic {
@@ -410,11 +412,22 @@ public class CheckerGameLogic {
                 ScoredMove toMove = capturedMoves.get(new Random().nextInt(capturedMoves.size()));
                 movePiece(toMove.move);
                 CirclePanel finalCapturingPiece = findPanelByCoord(toMove.move.getToRow(), toMove.move.getToCol());
-                SwingUtilities.invokeLater(() -> tryChainCapture(finalCapturingPiece));
+                boolean furtherCapture = canCaptureFrom(finalCapturingPiece);
+                if(furtherCapture){
+                    SwingUtilities.invokeLater(() -> tryChainCapture(finalCapturingPiece));
+                }else{
+                    SimpleChessBoard.switchTurn();
+                }
+
             }else {
                 movePiece(best.move);
                 CirclePanel finalCapturingPiece = findPanelByCoord(best.move.getToRow(), best.move.getToCol());
-                SwingUtilities.invokeLater(() -> tryChainCapture(finalCapturingPiece));
+                boolean furtherCapture = canCaptureFrom(finalCapturingPiece);
+                if(furtherCapture){
+                    SwingUtilities.invokeLater(() -> tryChainCapture(finalCapturingPiece));
+                }else{
+                    SimpleChessBoard.switchTurn();
+                }
             }
 
 
@@ -456,8 +469,10 @@ public class CheckerGameLogic {
                 if(allEqual){
                     ScoredMove toMove = normalMoves.get(new Random().nextInt(normalMoves.size()));
                     movePiece(toMove.move);
+                    SimpleChessBoard.switchTurn();
                 }else{
                     movePiece(best.move);
+                    SimpleChessBoard.switchTurn();
                 }
 
 
@@ -504,8 +519,13 @@ public class CheckerGameLogic {
         int colDiff = move.getToCol() - move.getFromCol();
 
         if(Math.abs(rowDiff) == 1 && Math.abs(colDiff) == 1){
+            // Wait 1 second, then move the piece
+
+
             from.setCircleColor(null);
             from.setKing(false);
+
+
 
             to.setCircleColor(color);
             to.setKing(isKing);
@@ -530,21 +550,6 @@ public class CheckerGameLogic {
             to.setKing(true);
         }
 
-        SimpleChessBoard.switchTurn();
-
-
-        //Optionally check winner
-        Color winner = checkWinner();
-        if(winner == null){
-            return;
-        }else if(winner != null && (winner.equals(Color.BLACK) || winner.equals(Color.BLUE) || winner.equals(Color.CYAN))){
-           SimpleChessBoard.disPlayingWinningState(winner);
-            if(winner.equals(Color.BLACK) || winner.equals(Color.BLUE) || winner.equals(Color.CYAN)){
-                CheckerGameLogic gameLogic = null;
-                SimpleChessBoard.restartTheGame(gameLogic);
-            }
-        }
-
 
     }
 
@@ -556,7 +561,12 @@ public class CheckerGameLogic {
             if (isCapture) {
                 movePiece(move); // perform the next capture
                 CirclePanel newPos = findPanelByCoord(move.getToRow(), move.getToCol());
-                SwingUtilities.invokeLater(() -> tryChainCapture(newPos)); // recurse
+                boolean furtherCapture = canCaptureFrom(newPos);
+                if(furtherCapture){
+                    SwingUtilities.invokeLater(() -> tryChainCapture(newPos));
+                }else{
+                    SimpleChessBoard.switchTurn();
+                }                 // recurse
                 return; // Exit after first found chain to avoid doing multiple branches
             }
         }
@@ -658,6 +668,8 @@ public class CheckerGameLogic {
         }
         return false;
     }
+
+
 
 
 }
